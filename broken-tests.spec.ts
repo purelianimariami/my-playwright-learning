@@ -38,3 +38,4 @@ test("cart badge appears after adding product", async ({ page }) => {
 });
 
 //testcommentdiff
+//testcomment2
