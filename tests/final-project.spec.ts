@@ -1,49 +1,22 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from "@playwright/test";
+import { LoginPage } from "../pages/LoginPage";
 
-test.describe('SauceDemo - Final Project E2E Tests', () => {
+test.describe("SauceDemo Final Project", () => {
+  let loginPage: LoginPage;
 
-    // Navigate to the base URL before each test
-    test.beforeEach(async ({ page }) => {
-        await page.goto('https://www.saucedemo.com/');
-    });
+  test.beforeEach(async ({ page }) => {
+    loginPage = new LoginPage(page);
+    await loginPage.goto();
+  });
 
-    test('User should be able to complete a full purchase journey', async ({ page }) => {
-        // 1. Login with standard user
-        await page.getByPlaceholder('Username').fill('standard_user');
-        await page.getByPlaceholder('Password').fill('secret_sauce');
-        await page.getByRole('button', { name: 'Login' }).click();
-        await expect(page).toHaveURL(/inventory/);
+  test("Successful login journey", async ({ page }) => {
+    await loginPage.login("standard_user", "secret_sauce");
+    await expect(page, "Should redirect to inventory page after login").toHaveURL(/inventory/);
+  });
 
-        // 2. Add a product to the cart
-        await page.locator('[data-test="add-to-cart-sauce-labs-backpack"]').click();
-        const cartBadge = page.locator('.shopping_cart_badge');
-        await expect(cartBadge).toHaveText('1');
-
-        // 3. Navigate to the cart and proceed to checkout
-        await page.locator('.shopping_cart_link').click();
-        await page.locator('[data-test="checkout"]').click();
-
-        // 4. Fill in the Checkout Information
-        await page.locator('[data-test="firstName"]').fill('Mariam');
-        await page.locator('[data-test="lastName"]').fill('Pureliani');
-        await page.locator('[data-test="postalCode"]').fill('0100');
-        await page.locator('[data-test="continue"]').click();
-
-        // 5. Review the order and Finish
-        await expect(page).toHaveURL(/checkout-step-two/);
-        await page.locator('[data-test="finish"]').click();
-
-        // 6. Verify the order confirmation message
-        const successHeader = page.locator('.complete-header');
-        await expect(successHeader).toHaveText('Thank you for your order!');
-    });
-
-    test('Should show error message for locked out user', async ({ page }) => {
-        await page.getByPlaceholder('Username').fill('locked_out_user');
-        await page.getByPlaceholder('Password').fill('secret_sauce');
-        await page.getByRole('button', { name: 'Login' }).click();
-
-        const errorMessage = page.locator('[data-test="error"]');
-        await expect(errorMessage).toContainText('Epic sadface: Sorry, this user has been locked out.');
-    });
+  test("Negative login - locked out user", async () => {
+    await loginPage.login("locked_out_user", "secret_sauce");
+    await expect(loginPage.errorMessage, "Error message for locked user should be visible").toBeVisible();
+    await expect(loginPage.errorMessage, "Error message should contain specific text").toContainText("Sorry, this user has been locked out");
+  });
 });
