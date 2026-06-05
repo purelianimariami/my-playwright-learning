@@ -36,3 +36,5 @@ test("cart badge appears after adding product", async ({ page }) => {
 
   await expect(page.locator(".shopping_cart_badge")).toHaveText("1");
 });
+
+//testcommentdiff
